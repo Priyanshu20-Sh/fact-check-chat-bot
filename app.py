@@ -100,7 +100,7 @@ with st.sidebar:
                 router.hybrid_retriever = st.session_state.hybrid_retriever
 
 # Main Page Header
-st.title("Autonomus Rag")
+st.title("Fact Checker Agent")
 
 # Display Chat History
 for msg in st.session_state.messages:
