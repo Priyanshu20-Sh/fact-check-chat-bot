@@ -1,0 +1,58 @@
+# Fact-Checking System Architecture Design
+
+
+```
+                         User Question (with PDF)
+                               │
+                               ▼
+                          Router Agent (llama-3.1-8b)
+                               │
+            ┌──────────────────┼──────────────────┐
+            │                  │                  │
+            ▼                  ▼                  ▼
+     [Route: general]     [Route: web]     [Route: document]
+            │                  │                  │
+            ▼                  ▼                  ▼
+      General Answer     Tavily Search       Query Rewrite
+       (LLM Only)        (Web Search)       (node_query_re)
+            │                  │                  │
+            │                  │                  ▼
+            │                  │           Hybrid Retrieval
+            │                  │                  │
+            └──────────────────┼──────────────────┘
+                               │
+                               ▼
+                      Verification Agent (Fact-Checking)
+                         (Extracts & Verifies Claims)
+                               │
+                               ▼
+                   Fact-Check Report (Verified/False/Inaccurate)
+                               │
+                               ▼
+                      Summarize (Final Answer)
+                               │
+                               ▼
+                              END
+```
+
+---
+
+Explanation of the Workflow
+
+# 1. Classification & Routing
+Router Agent: Evaluates the input query and dynamically classifies it into one of three routes:
+  1 general: Standard conversational responses that do not require external document or web context.
+  2 web: Fetches real-time web search results using Tavily.
+  3 document: Executes a full semantic search pipeline on the local indexed PDF corpus.
+
+# 2. Document Search Pipeline (Document Route)
+  1 Query Rewrite: Rewrites the question into a structured search prompt.
+  2 Hybrid Retrieval: Executes dense-sparse hybrid retrieval (FAISS + BM25) to get the most relevant blocks from the uploaded document.
+
+# 3. Verification & Fact-Checking
+  1 Verification Agent: Takes the extracted claims from the retrieved local context or general web answers.
+  2 Cross-Reference: The Verification Agent searches the live web using Tavily to verify the claims.
+  3 Fact-Check Report: Flags the claims as Verified (matches data), Inaccurate (e.g., outdated stats), or False (no evidence found), and provides the correct "real" facts.
+
+# 4. Final Output
+  1 Summarize: Formats and presents the final Fact-Check Report to the user via the Streamlit interface.
